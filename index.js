@@ -2,10 +2,40 @@ const { exec } = require('child_process');
 const path = require('path');
 const express = require('express');
 const fs = require('fs');
+const ffmpeg = require('fluent-ffmpeg');
+const ffmpegStatic = require('ffmpeg-static');
 const app = express();
-// 
+
+ffmpeg.setFfmpegPath(ffmpegStatic);
+
 function getFfmpeg(cam, camPath) {
-    return `ffmpeg -i ${cam} -c:v libx264 -vf scale=1280:720 -b:a 1k -ac 1 -c:v libx264 -crf 21 -preset veryfast -flags -global_header -segment_wrap 1 -hls_list_size 1 -tune zerolatency -f hls -hls_time 30 -maxrate 1M -bufsize 100k -r 10 -movflags +faststart -start_number 1 -hls_allow_cache 0 -fflags nobuffer -threads 1 -loglevel warning -y -hls_flags delete_segments ./hls/${camPath}/stream.m3u8`
+// Run FFmpeg
+ffmpeg()
+  .input(cam)
+  .outputOptions('-c:v', 'libx264')
+  .outputOptions('-vf', 'scale=1280:720')
+  .outputOptions('-b:a', '1k')
+  .outputOptions('-ac', '1')
+  .outputOptions('-crf', '21')
+  .outputOptions('-preset', 'veryfast')
+  .outputOptions('-segment_wrap', '1')
+  .outputOptions('-hls_list_size', '1')
+  .outputOptions('-tune', 'zerolatency')
+  .outputOptions('-f', 'hls')
+  .outputOptions('-hls_time', '30')
+  .outputOptions('-maxrate', '1M')
+  .outputOptions('-bufsize', '100k')
+  .outputOptions('-r', '10')
+  .outputOptions('-movflags', '+faststart')
+  .outputOptions('-start_number', '1')
+  .outputOptions('-hls_allow_cache', '0')
+  .outputOptions('-fflags', 'nobuffer')
+  .outputOptions('-threads', '1')
+  .outputOptions('-loglevel', 'warning')
+  .outputOptions('-hls_flags', 'delete_segments')
+  .saveToFile(`./hls/${camPath}/stream.m3u8`)
+    return `ffmpeg -i ${cam}                      `
+    // return `ffmpeg -i ${cam} -c:v libx264 -vf scale=1280:720 -b:a 1k -ac 1 -c:v libx264 -crf 21 -preset veryfast -flags -global_header -segment_wrap 1 -hls_list_size 1 -tune zerolatency -f hls -hls_time 30 -maxrate 1M -bufsize 100k -r 10 -movflags +faststart -start_number 1 -hls_allow_cache 0 -fflags nobuffer -threads 1 -loglevel warning -y -hls_flags delete_segments ./hls/${camPath}/stream.m3u8`
   }
 function startFfmpeg(param) {
   const cams = [
@@ -21,14 +51,14 @@ function startFfmpeg(param) {
   let indexCam = cams.indexOf(cams.filter(val => val.id === param)[0])
   const command = getFfmpeg(cams[indexCam].address, cams[indexCam].id)
   console.log('param', param)
-  exec(command, (error, stdout, stderr) => {
-    if (error) {
-      console.error(`exec error: ${error}`);
-      return;
-    }
-    console.log(`stdout: ${stdout}`);
-    console.error(`stderr: ${stderr}`);
-  });
+  // exec(command, (error, stdout, stderr) => {
+  //   if (error) {
+  //     console.error(`exec error: ${error}`);
+  //     return;
+  //   }
+  //   console.log(`stdout: ${stdout}`);
+  //   console.error(`stderr: ${stderr}`);
+  // });
 }
 app.use(function(req, res, next) {
     res.header("Access-Control-Allow-Origin", "*");
